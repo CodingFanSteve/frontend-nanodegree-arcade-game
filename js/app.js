@@ -1,3 +1,26 @@
+const DIFFICULTY = {
+	EASY : {
+		num_enemies : 5,
+		min_speed : 100,
+		max_speed : 300,
+		get_speed : function() { return randomRange(this.min_speed, this.max_speed); }
+	},
+	MEDIUM : {
+		num_enemies : 7,
+		min_speed : 100,
+		max_speed : 500,
+		get_speed : function() { return randomRange(this.min_speed, this.max_speed); }
+	},
+	HARD : {
+        num_enemies : 9,
+		min_speed : 100,
+		max_speed : 700,
+		get_speed : function() { return randomRange(this.min_speed, this.max_speed); }
+	}
+};
+
+var CUR_DIFF = DIFFICULTY.EASY;
+
 const DIM = {
 	x : 101,
 	y : 171,
@@ -28,7 +51,7 @@ Character.prototype.render = function() {
 };
 
 // Enemies our player must avoid
-var Enemy = function(row, speed) {
+var Enemy = function() {
     var sprite = 'images/enemy-bug.png';
 
     Character.call(this, sprite);
@@ -50,7 +73,7 @@ Enemy.prototype.update = function(dt) {
 Enemy.prototype.reset = function() {
 	this.x = col2Pixel(-1);
 	this.y = row2Pixel(randomRange(0, NUM_ROWS - 1));
-	this.speed = randomRange(100, 300);
+	this.speed = CUR_DIFF.get_speed();
 };
 
 // Now write your own player class
@@ -91,24 +114,34 @@ Player.prototype.handleInput = function(key) {
     }
 };
 
-// Now instantiate your objects.
-// Place all enemy objects in an array called allEnemies
-// Place the player object in a variable called player
-function getEnemies() {
-    return [
-        new Enemy(1, 20), 
-        new Enemy(1, 30), 
-        new Enemy(2, 40),
-        new Enemy(3, 50),
-        new Enemy(5, 60)];
-};
+(function defineRadioHandler() {
+	var radioChangeHandler = function() {
+		player.reset();		
+		allEnemies = [];
 
-function getPlayer() {
-    return new Player();
-};
+		CUR_DIFF = DIFFICULTY[this.value];
 
-var allEnemies = getEnemies(),
-    player = getPlayer();
+		for (var i = 0; i < CUR_DIFF.num_enemies; i++) {
+			allEnemies.push(new Enemy());
+		}
+
+			this.blur();
+	};
+
+	var radios = document.getElementById("difficultyList").getElementsByTagName("input");
+	for (var idx in radios) {
+		if (radios.hasOwnProperty(idx)) {
+			radios[idx].onclick = radioChangeHandler;
+		}
+	}
+})();
+
+
+var allEnemies = [],
+    player = new Player();
+for (var i = 0; i < CUR_DIFF.num_enemies; i++) {
+	allEnemies.push(new Enemy());
+}
 
 // This listens for key presses and sends the keys to your
 // Player.handleInput() method. You don't need to modify this.
