@@ -72,7 +72,7 @@ Enemy.prototype.update = function(dt) {
 };
 Enemy.prototype.reset = function() {
 	this.x = col2Pixel(-1);
-	this.y = row2Pixel(randomRange(0, NUM_ROWS - 1));
+	this.y = row2Pixel(randomRange(1, NUM_ROWS - 1));
 	this.speed = CUR_DIFF.get_speed();
 };
 
@@ -91,13 +91,23 @@ Player.prototype.reset = function() {
 	this.y = row2Pixel(5); 
 };
 Player.prototype.update = function() {
-	var self = this;
+	var self = this,
+		loss = false;
 
     allEnemies.forEach(function(enemy) {
     	if (enemy.y == self.y && enemy.x >= self.x - 81 && enemy.x <= self.x + 81) {
     		self.reset();
+    		loss = true;
     	}
     });
+
+    if (loss) {
+    	scoreboard.lose();
+    }
+    else if (self.y === 0) {
+    	self.reset();
+    	scoreboard.win();
+    }
 };
 Player.prototype.handleInput = function(key) {
     if (key === 'left') {
@@ -114,9 +124,35 @@ Player.prototype.handleInput = function(key) {
     }
 };
 
+var Scoreboard = function() {
+	this.wins = 0,
+	this.losses = 0;
+
+	var tags = document.getElementsByTagName("td");
+	this.winsTag = tags[0];
+	this.lossesTag = tags[1];
+	this.winsTag.innerHTML = this.wins;
+	this.lossesTag.innerHTML = this.losses;
+};
+Scoreboard.prototype.win = function() {
+	this.wins++;
+	this.winsTag.innerHTML = this.wins;
+};
+Scoreboard.prototype.lose = function() {
+	this.losses--;
+	this.lossesTag.innerHTML = this.losses;
+};
+Scoreboard.prototype.reset = function() {
+	this.wins = 0;
+	this.losses = 0;
+	this.winsTag.innerHTML = this.wins;
+	this.lossesTag.innerHTML = this.losses;
+};
+
 (function defineRadioHandler() {
 	var radioChangeHandler = function() {
-		player.reset();		
+		player.reset();	
+		scoreboard.reset();
 		allEnemies = [];
 
 		CUR_DIFF = DIFFICULTY[this.value];
@@ -125,7 +161,7 @@ Player.prototype.handleInput = function(key) {
 			allEnemies.push(new Enemy());
 		}
 
-			this.blur();
+		this.blur();
 	};
 
 	var radios = document.getElementById("difficultyList").getElementsByTagName("input");
@@ -136,9 +172,9 @@ Player.prototype.handleInput = function(key) {
 	}
 })();
 
-
 var allEnemies = [],
-    player = new Player();
+    player = new Player(),
+    scoreboard = new Scoreboard();
 for (var i = 0; i < CUR_DIFF.num_enemies; i++) {
 	allEnemies.push(new Enemy());
 }
